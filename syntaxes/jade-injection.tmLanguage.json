@@ -1,0 +1,50 @@
+{
+  "name": "Jade Schema (Lua injection)",
+  "scopeName": "source.jade.inject",
+  "injectionSelector": "L:source.lua",
+  "patterns": [
+    {
+      "include": "#types"
+    },
+    {
+      "include": "#modifiers"
+    },
+    {
+      "include": "#relations"
+    }
+  ],
+  "repository": {
+    "types": {
+      "patterns": [
+        {
+          "match": "\\b(Integer|String|Text|Boolean|Timestamp|Date|UUID|CUID|NanoID|Float|Decimal|BigInt|JSON|Enum)\\b",
+          "name": "support.type.primitive.jade"
+        },
+        {
+          "match": "\\b(Schema|Entity|SoftDelete|Audit|Encryption|Events)\\b",
+          "name": "support.type.class.jade"
+        }
+      ]
+    },
+    "modifiers": {
+      "patterns": [
+        {
+          "match": "(\\?|!)",
+          "name": "keyword.operator.modifier.jade"
+        },
+        {
+          "match": ":(primaryKey|autoIncrement|notNull|unique|default|foreignKey|nullable|inValues|defaultNow|encrypted)\\b",
+          "name": "support.type.modifier.jade"
+        }
+      ]
+    },
+    "relations": {
+      "patterns": [
+        {
+          "match": "\\b(belongsTo|hasMany|hasOne|hasAndBelongsToMany|hasManyThrough)\\b",
+          "name": "support.type.relation.jade"
+        }
+      ]
+    }
+  }
+}

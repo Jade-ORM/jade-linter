@@ -7,7 +7,7 @@
   "icon": "assets/jade-icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/AlehandroSV/jade-linter"
+    "url": "https://github.com/Jade-ORM/jade-linter"
   },
   "engines": {
     "vscode": "^1.85.0"
@@ -27,27 +27,38 @@
   "contributes": {
     "languages": [
       {
-        "id": "lua",
+        "id": "jade",
         "aliases": [
-          "Lua",
-          "lua"
+          "Jade Schema",
+          "jade"
         ],
         "extensions": [
-          ".lua"
+          ".jade"
         ],
         "configuration": "./language-configuration.json"
       }
     ],
     "grammars": [
       {
-        "language": "lua",
-        "scopeName": "source.lua.jade",
+        "language": "jade",
+        "scopeName": "source.jade",
         "path": "./syntaxes/jade.tmLanguage.json"
+      },
+      {
+        "scopeName": "source.jade.inject",
+        "path": "./syntaxes/jade-injection.tmLanguage.json",
+        "injectTo": [
+          "source.lua"
+        ]
       }
     ],
     "snippets": [
       {
         "language": "lua",
+        "path": "./snippets/jade.json"
+      },
+      {
+        "language": "jade",
         "path": "./snippets/jade.json"
       }
     ],
