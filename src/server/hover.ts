@@ -78,13 +78,14 @@ export class HoverProvider {
       return this.createNestedKeywordHover(word, nestedInfo.desc, nestedInfo.example);
     }
 
-    // Check if it's an FK field (ends with _id) — show inferred relation
-    if (word.endsWith("_id") && line.includes("jade.Integer")) {
+    // Check if it's an FK field (ends with _id) — show inferred relation for any FK type
+    if (word.endsWith("_id")) {
       const base = word.slice(0, -3);
       const tableName = base + "s";
-      const targetModel = this.schemaIndex.getModelByName(
-        base.charAt(0).toUpperCase() + base.slice(1)
-      ) || this.schemaIndex.getModelByTable(tableName);
+      const targetModel =
+        this.analyzer.findModelByName(
+          base.charAt(0).toUpperCase() + base.slice(1)
+        ) || this.analyzer.findModelByTable(tableName);
 
       if (targetModel) {
         return this.createFKHover(word, targetModel.name);

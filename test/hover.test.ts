@@ -105,6 +105,84 @@ User = {
     });
   });
 
+  describe("FK field hover (#3)", () => {
+    const fkContent = `
+User = {
+  id = jade.Integer():primaryKey()
+}
+
+Post = {
+  user_id = jade.Integer():foreignKey("users", "id")
+}
+
+Token = {
+  user_id = jade.UUID()
+}
+
+Session = {
+  user_id = jade.BigInt()
+}
+
+Invite = {
+  user_id = jade.CUID()
+}
+
+Recovery = {
+  user_id = jade.NanoID()
+}
+`;
+
+    function getFkHover(line: string, char?: number) {
+      const analyzer = new SchemaAnalyzer(fkContent, new SchemaIndex());
+      const provider = new HoverProvider(analyzer, new SchemaIndex());
+      return provider.getHover(line, char ?? Math.floor(line.length / 2));
+    }
+
+    it("hover on Integer FK field ending in _id shows FK info", () => {
+      const hover = getFkHover("user_id");
+      expect(hover).not.toBeNull();
+      const content = (hover!.contents as any).value;
+      expect(content).toContain("user_id");
+      expect(content).toContain("belongsTo");
+      expect(content).toContain("User");
+    });
+
+    it("hover on UUID field ending in _id shows FK info", () => {
+      const hover = getFkHover("user_id");
+      expect(hover).not.toBeNull();
+      const content = (hover!.contents as any).value;
+      expect(content).toContain("belongsTo");
+      expect(content).toContain("User");
+    });
+
+    it("hover on BigInt field ending in _id shows FK info", () => {
+      const hover = getFkHover("user_id");
+      expect(hover).not.toBeNull();
+      const content = (hover!.contents as any).value;
+      expect(content).toContain("belongsTo");
+    });
+
+    it("hover on CUID field ending in _id shows FK info", () => {
+      const hover = getFkHover("user_id");
+      expect(hover).not.toBeNull();
+      const content = (hover!.contents as any).value;
+      expect(content).toContain("belongsTo");
+    });
+
+    it("hover on NanoID field ending in _id shows FK info", () => {
+      const hover = getFkHover("user_id");
+      expect(hover).not.toBeNull();
+      const content = (hover!.contents as any).value;
+      expect(content).toContain("belongsTo");
+    });
+
+    it("hover works without jade.Integer prefix on the line", () => {
+      // Regression for #3 — previously required line.includes("jade.Integer")
+      const hover = getFkHover("user_id");
+      expect(hover).not.toBeNull();
+    });
+  });
+
   describe("No hover", () => {
     it("returns null for unknown words", () => {
       const hover = getHover("foobar");

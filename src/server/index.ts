@@ -64,7 +64,7 @@ connection.onInitialized(() => {
   // Watch for schema file changes
   connection.onNotification("workspace/didChangeWatchedFiles", async (params) => {
     for (const change of params.changes) {
-      if (change.uri.endsWith(".lua")) {
+      if (change.uri.endsWith(".lua") || change.uri.endsWith(".jade")) {
         const filePath = change.uri.replace("file:///", "").replace(/%20/g, " ");
         await schemaIndex.indexFile(filePath);
       }

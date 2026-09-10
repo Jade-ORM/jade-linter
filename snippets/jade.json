@@ -64,5 +64,30 @@
       "${1:field} = jade.Timestamp():defaultNow(),"
     ],
     "description": "Jade timestamp field with defaultNow"
+  },
+  "Jade Declarative Model": {
+    "prefix": "jade-model-block",
+    "body": [
+      "model ${1:Name} {",
+      "    table = \"${2:names}\"",
+      "    ${3:field} = ${4:String(120)!}",
+      "    ${0}",
+      "}"
+    ],
+    "description": "Declarative .jade model block"
+  },
+  "Jade Declarative Field": {
+    "prefix": "jade-decl-field",
+    "body": [
+      "${1:field} = ${2:String(120)!}"
+    ],
+    "description": "Declarative .jade field"
+  },
+  "Jade Declarative Relation": {
+    "prefix": "jade-decl-relation",
+    "body": [
+      "${1:posts} = ${2|hasMany,belongsTo,hasOne|}(${3:Model})"
+    ],
+    "description": "Declarative .jade relation"
   }
 }

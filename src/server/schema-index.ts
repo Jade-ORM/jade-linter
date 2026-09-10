@@ -8,6 +8,10 @@ export interface SchemaInfo {
   lastModified: number;
 }
 
+function isSchemaFile(name: string): boolean {
+  return name.endsWith(".lua") || name.endsWith(".jade");
+}
+
 export class SchemaIndex {
   private schemas: Map<string, SchemaInfo> = new Map();
   private watchPaths: string[] = [];
@@ -17,26 +21,26 @@ export class SchemaIndex {
     this.watchPaths = [
       "schema",
       "schema/**/*.lua",
+      "schema/**/*.jade",
       "schemas",
-      "schemas/**/*.lua"
+      "schemas/**/*.lua",
+      "schemas/**/*.jade",
     ];
   }
 
   async buildIndex(workspacePath: string): Promise<void> {
     this.schemas.clear();
 
-    // Find all Lua files that might contain schemas
-    const luaFiles = this.findLuaFiles(workspacePath);
+    const files = this.findSchemaFiles(workspacePath);
 
-    for (const filePath of luaFiles) {
+    for (const filePath of files) {
       await this.indexFile(filePath);
     }
 
-    // Watch for changes
     this.startWatching(workspacePath);
   }
 
-  private findLuaFiles(dir: string): string[] {
+  private findSchemaFiles(dir: string): string[] {
     const files: string[] = [];
 
     try {
@@ -45,13 +49,17 @@ export class SchemaIndex {
       for (const entry of entries) {
         const fullPath = path.join(dir, entry.name);
 
-        if (entry.isDirectory() && !entry.name.startsWith(".") && entry.name !== "node_modules") {
-          files.push(...this.findLuaFiles(fullPath));
-        } else if (entry.isFile() && entry.name.endsWith(".lua")) {
+        if (
+          entry.isDirectory() &&
+          !entry.name.startsWith(".") &&
+          entry.name !== "node_modules"
+        ) {
+          files.push(...this.findSchemaFiles(fullPath));
+        } else if (entry.isFile() && isSchemaFile(entry.name)) {
           files.push(fullPath);
         }
       }
-    } catch (error) {
+    } catch {
       // Ignore permission errors
     }
 
@@ -68,10 +76,10 @@ export class SchemaIndex {
         this.schemas.set(filePath, {
           models: result.models,
           filePath,
-          lastModified: Date.now()
+          lastModified: Date.now(),
         });
       }
-    } catch (error) {
+    } catch {
       // Ignore parse errors
     }
   }
@@ -86,7 +94,7 @@ export class SchemaIndex {
         workspacePath,
         { recursive: true },
         (eventType, filename) => {
-          if (filename && filename.endsWith(".lua")) {
+          if (filename && isSchemaFile(filename)) {
             const filePath = path.join(workspacePath, filename);
             if (eventType === "change" || eventType === "rename") {
               this.indexFile(filePath);
@@ -94,7 +102,7 @@ export class SchemaIndex {
           }
         }
       );
-    } catch (error) {
+    } catch {
       // Ignore watch errors
     }
   }
@@ -109,7 +117,7 @@ export class SchemaIndex {
 
   getModelByName(name: string): SchemaModel | undefined {
     for (const info of this.schemas.values()) {
-      const model = info.models.find(m => m.name === name);
+      const model = info.models.find((m) => m.name === name);
       if (model) {
         return model;
       }
@@ -119,7 +127,7 @@ export class SchemaIndex {
 
   getModelByTable(table: string): SchemaModel | undefined {
     for (const info of this.schemas.values()) {
-      const model = info.models.find(m => m.table === table);
+      const model = info.models.find((m) => m.table === table);
       if (model) {
         return model;
       }
@@ -128,12 +136,12 @@ export class SchemaIndex {
   }
 
   getModelNames(): string[] {
-    return this.getAllModels().map(m => m.name);
+    return this.getAllModels().map((m) => m.name);
   }
 
   getTableNames(): string[] {
     return this.getAllModels()
-      .map(m => m.table || m.name.toLowerCase() + "s")
+      .map((m) => m.table || m.name.toLowerCase() + "s")
       .filter((v, i, a) => a.indexOf(v) === i);
   }
 

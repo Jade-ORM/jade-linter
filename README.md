@@ -6,13 +6,14 @@ Linter, IDE support, and auto-relation detection for [Jade ORM](https://github.c
 
 ## Features
 
+- **Two schema formats** — first-class `.jade` declarative **and** Lua Entity style
 - **Syntax Highlighting** — Jade types and modifiers in `.lua` files (injection; coexists with sumneko.lua) and native `.jade` language registration
-- **Auto-Completion** — Suggestions for types (`jade.`), modifiers (`:primaryKey()`, `:foreignKey()`), table names, and model names
+- **Auto-Completion** — Types, modifiers (`!`, `?`, `.default`, `:primaryKey()`, `:foreignKey()`), relations, table names, and model names
 - **Linting** — Real-time error detection for invalid types, missing modifiers, and broken references
-- **Auto-Relation Detection** — Infers `belongsTo` relations from `:foreignKey()` modifiers and `_id` naming conventions
-- **Hover** — Documentation on hover for types, modifiers, relations, and FK fields
+- **Auto-Relation Detection** — Infers `belongsTo` relations from `:foreignKey()` modifiers, `hasMany`/`belongsTo`/`hasOne` calls, and `_id` naming conventions
+- **Hover** — Documentation on hover for types, modifiers, relations, and FK fields (Integer, BigInt, UUID, CUID, NanoID)
 - **Cross-File Validation** — Validates references across all schema files in the workspace
-- **Snippets** — Common code templates (`jade-entity`, `jade-field`, `jade-relation`)
+- **Snippets** — Common code templates for both formats
 - **Formatting** — Auto-format schema files
 
 ## Installation
@@ -23,6 +24,36 @@ Linter, IDE support, and auto-relation detection for [Jade ORM](https://github.c
 4. Click **Install**
 
 ## Usage
+
+### Declarative `.jade` (recommended for v2)
+
+Open `schema/models.jade` (or any `.jade` file):
+
+```jade
+model User {
+    table = "users"
+    name = String(120)!
+    email = String(255)!
+    bio = Text()?
+    role = String(50)!default("user")
+    posts = hasMany(Post)
+}
+
+model Post {
+    title = String(255)!
+    content = Text()
+    user_id = Integer!
+    author = belongsTo(User)
+}
+```
+
+Syntax is aligned with core `Declarative.parsedeclarativeSchema`:
+- `Type`, `Type()`, `Type(len)`, `Decimal(p,s)` (case-insensitive)
+- `!` required (notNull) · `?` nullable · `!default(...)` / `.default(...)`
+- Relations: `hasMany(Model)`, `belongsTo(Model)`, `hasOne(Model)`
+- Options: `table = "..."`, `timestamps = false`, `id = false`
+
+### Lua Entity style (escape hatch)
 
 Open any `.lua` file containing Jade schema code:
 

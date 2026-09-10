@@ -1,4 +1,4 @@
-import { SchemaParser, ParsedSchema, SchemaModel, SchemaField, SchemaError } from "./parser";
+import { SchemaParser, ParsedSchema, SchemaModel, SchemaField, SchemaError, SchemaFormat } from "./parser";
 import { getTypeByName } from "../schema/types";
 import { getModifierByName } from "../schema/modifiers";
 import { SchemaIndex } from "./schema-index";
@@ -15,6 +15,12 @@ export class SchemaAnalyzer {
   constructor(content: string, schemaIndex?: SchemaIndex) {
     this.parser = new SchemaParser(content);
     this.schemaIndex = schemaIndex || new SchemaIndex();
+    // Parse eagerly so getFormat / findModel* work before analyze()
+    this.parser.parse();
+  }
+
+  getFormat(): SchemaFormat {
+    return this.parser.getFormat();
   }
 
   analyze(): AnalysisResult {
@@ -59,7 +65,7 @@ export class SchemaAnalyzer {
     const type = getTypeByName(field.type);
     if (!type) {
       diagnostics.push({
-        message: `Tipo '${field.type}' não existe. Tipos válidos: Integer, String, Text, Boolean, Timestamp, Date, UUID, CUID, NanoID, Float, Decimal, BigInt, JSON, Enum`,
+        message: `Unknown type '${field.type}'. Valid types: Integer, String, Text, Boolean, Timestamp, Date, UUID, CUID, NanoID, Float, Decimal, BigInt, JSON, Enum`,
         line: field.line,
         character: field.character,
         severity: "error",
@@ -68,10 +74,10 @@ export class SchemaAnalyzer {
       return;
     }
 
-    // Check if String has length
-    if (field.type === "String" && !field.length) {
+    // Check if String has length (Lua Entity style only; .jade defaults to 255)
+    if (schema.format === "lua" && field.type === "String" && !field.length) {
       diagnostics.push({
-        message: "String deve ter tamanho especificado. Ex: jade.String(120)",
+        message: "String requires a length. Example: jade.String(120)",
         line: field.line,
         character: field.character,
         severity: "warning"
@@ -83,7 +89,7 @@ export class SchemaAnalyzer {
       const mod = getModifierByName(modifier);
       if (!mod) {
         diagnostics.push({
-          message: `Modificador '${modifier}' não existe`,
+          message: `Unknown modifier '${modifier}'`,
           line: field.line,
           character: field.character,
           severity: "error",
@@ -95,7 +101,7 @@ export class SchemaAnalyzer {
     // Info: Primary key auto
     if (field.name === "id" && field.type === "Integer") {
       diagnostics.push({
-        message: "Campo 'id' é Primary Key automático",
+        message: "Field 'id' is an automatic Primary Key",
         line: field.line,
         character: field.character,
         severity: "information"
@@ -106,7 +112,7 @@ export class SchemaAnalyzer {
     if (field.name === "created_at" && field.type === "Timestamp") {
       if (!field.modifiers.includes("default") && !field.modifiers.includes("defaultNow")) {
         diagnostics.push({
-          message: "Campo 'created_at' deveria ter defaultNow()",
+          message: "Field 'created_at' should have defaultNow()",
           line: field.line,
           character: field.character,
           severity: "warning"
@@ -128,7 +134,7 @@ export class SchemaAnalyzer {
 
     if (!referencedInCurrent && !referencedInIndex) {
       diagnostics.push({
-        message: `Model '${relation.model}' não existe. Models disponíveis: ${allModels.map(m => m.name).join(", ")}`,
+        message: `Model '${relation.model}' does not exist. Available models: ${allModels.map(m => m.name).join(", ") || "(none)"}`,
         line: relation.line,
         character: relation.character,
         severity: "error",
@@ -140,7 +146,7 @@ export class SchemaAnalyzer {
     const validRelationTypes = ["belongsTo", "hasMany", "hasOne", "hasAndBelongsToMany", "hasManyThrough"];
     if (!validRelationTypes.includes(relation.type)) {
       diagnostics.push({
-        message: `Tipo de relation '${relation.type}' não existe. Tipos válidos: belongsTo, hasMany, hasOne, hasAndBelongsToMany, hasManyThrough`,
+        message: `Unknown relation type '${relation.type}'. Valid types: belongsTo, hasMany, hasOne, hasAndBelongsToMany, hasManyThrough`,
         line: relation.line,
         character: relation.character,
         severity: "error",
@@ -151,7 +157,7 @@ export class SchemaAnalyzer {
     // Info: inferred relation
     if (relation.inferred) {
       diagnostics.push({
-        message: `Relação '${relation.type}' inferida via '${relation.foreignKey}' → ${relation.model}`,
+        message: `Inferred '${relation.type}' relation via '${relation.foreignKey}' → ${relation.model}`,
         line: relation.line,
         character: relation.character,
         severity: "information",
