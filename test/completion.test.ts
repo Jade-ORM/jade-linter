@@ -81,8 +81,18 @@ User = {
       expect(labels).toContain("Events");
       expect(labels).toContain("cache");
       expect(labels).toContain("database");
-      expect(labels).toContain("test");
-      expect(labels).toContain("Seed");
+    });
+
+    it("does not suggest non-public jade.test", () => {
+      const items = getCompletions("");
+      const labels = items.map(i => i.label);
+      expect(labels).not.toContain("test");
+    });
+
+    it("does not suggest non-public jade.Seed", () => {
+      const items = getCompletions("");
+      const labels = items.map(i => i.label);
+      expect(labels).not.toContain("Seed");
     });
 
     it("returns Schema snippet", () => {

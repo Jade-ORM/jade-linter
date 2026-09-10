@@ -6,7 +6,7 @@ Linter, IDE support, and auto-relation detection for [Jade ORM](https://github.c
 
 ## Features
 
-- **Syntax Highlighting** — Jade types and modifiers highlighted in `.lua` files
+- **Syntax Highlighting** — Jade types and modifiers in `.lua` files (injection; coexists with sumneko.lua) and native `.jade` language registration
 - **Auto-Completion** — Suggestions for types (`jade.`), modifiers (`:primaryKey()`, `:foreignKey()`), table names, and model names
 - **Linting** — Real-time error detection for invalid types, missing modifiers, and broken references
 - **Auto-Relation Detection** — Infers `belongsTo` relations from `:foreignKey()` modifiers and `_id` naming conventions

@@ -289,7 +289,7 @@ export class CompletionProvider {
       insertTextFormat: InsertTextFormat.Snippet
     });
 
-    // Add Jade modules
+    // Public modules only — jade.test / jade.Seed are require-only, not on the jade table
     const modules = [
       { name: "SoftDelete", detail: "Soft delete setup — jade.SoftDelete.setup(entity)" },
       { name: "Audit", detail: "Audit trail — jade.Audit.setup(entity)" },
@@ -297,8 +297,6 @@ export class CompletionProvider {
       { name: "Events", detail: "Event system — jade.Events.define(entity, names)" },
       { name: "cache", detail: "Query caching — jade.cache.get/set/delete" },
       { name: "database", detail: "Multi-database — jade.database.configure({...})" },
-      { name: "test", detail: "Test helpers — jade.test.setup(jade)" },
-      { name: "Seed", detail: "Seed system — jade.Seed.register(name, path)" },
     ];
 
     modules.forEach(mod => {

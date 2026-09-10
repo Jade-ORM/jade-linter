@@ -1,6 +1,6 @@
 {
   "name": "Jade Schema",
-  "scopeName": "source.lua.jade",
+  "scopeName": "source.jade",
   "patterns": [
     {
       "include": "#keywords"
@@ -28,12 +28,8 @@
     "keywords": {
       "patterns": [
         {
-          "match": "\\b(local|return|function|end|if|then|else|elseif|for|while|do|repeat|until|break|nil|true|false|and|or|not)\\b",
-          "name": "keyword.control.lua"
-        },
-        {
-          "match": "\\b(require|dofile|loadfile|pcall|xpcall|assert|error|ipairs|pairs|print|tostring|tonumber|type|select|unpack)\\b",
-          "name": "support.function.lua"
+          "match": "\\b(model|table|timestamps|relations|options)\\b",
+          "name": "keyword.control.jade"
         }
       ]
     },
@@ -66,22 +62,22 @@
         {
           "begin": "\"",
           "end": "\"",
-          "name": "string.quoted.double.lua",
+          "name": "string.quoted.double.jade",
           "patterns": [
             {
               "match": "\\\\.",
-              "name": "constant.character.escape.lua"
+              "name": "constant.character.escape.jade"
             }
           ]
         },
         {
           "begin": "'",
           "end": "'",
-          "name": "string.quoted.single.lua",
+          "name": "string.quoted.single.jade",
           "patterns": [
             {
               "match": "\\\\.",
-              "name": "constant.character.escape.lua"
+              "name": "constant.character.escape.jade"
             }
           ]
         }
@@ -91,7 +87,7 @@
       "patterns": [
         {
           "match": "\\b[0-9]+(\\.[0-9]+)?\\b",
-          "name": "constant.numeric.lua"
+          "name": "constant.numeric.jade"
         }
       ]
     },
@@ -99,12 +95,7 @@
       "patterns": [
         {
           "match": "--.*$",
-          "name": "comment.line.double-dash.lua"
-        },
-        {
-          "begin": "--\\[\\[",
-          "end": "\\]\\]",
-          "name": "comment.block.lua"
+          "name": "comment.line.double-dash.jade"
         }
       ]
     },
