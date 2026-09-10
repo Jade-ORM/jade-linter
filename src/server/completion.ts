@@ -15,6 +15,22 @@ export class CompletionProvider {
 
   getCompletions(line: string, character: number): CompletionItem[] {
     const items: CompletionItem[] = [];
+    const isJadeFormat = this.analyzer.getFormat() === "jade";
+
+    if (isJadeFormat) {
+      if (this.isJadeTypeContext(line, character)) {
+        items.push(...this.getTypeCompletions());
+      } else if (this.isJadeModifierContext(line, character)) {
+        items.push(...this.getJadeModifierCompletions());
+      } else if (this.isJadeRelationCallContext(line, character)) {
+        items.push(...this.getRelationCallCompletions());
+      } else if (this.isJadeModelStartContext(line, character)) {
+        items.push(...this.getJadeKeywordCompletions());
+      } else {
+        items.push(...this.getJadeGeneralCompletions());
+      }
+      return items;
+    }
 
     // Check context — order matters (more specific first)
     if (this.isAfterJade(line, character)) {
@@ -36,6 +52,156 @@ export class CompletionProvider {
     } else {
       items.push(...this.getGeneralCompletions());
     }
+
+    return items;
+  }
+
+  // ─── .jade declarative contexts ─────────────────────────────────
+
+  private isJadeTypeContext(line: string, character: number): boolean {
+    const beforeCursor = line.substring(0, character);
+    // `field = ` or `field = Str` — not a relation call, not an option key
+    if (!/^\s*[A-Za-z_]\w*\s*=\s*[A-Za-z.]*$/.test(beforeCursor)) {
+      return false;
+    }
+    const name = beforeCursor.match(/^\s*([A-Za-z_]\w*)\s*=/)?.[1];
+    if (!name) return false;
+    const optionKeys = new Set(["table", "timestamps", "id"]);
+    return !optionKeys.has(name);
+  }
+
+  private isJadeModifierContext(line: string, character: number): boolean {
+    const beforeCursor = line.substring(0, character);
+    if (/^\s*(table|timestamps|id)\s*=/.test(beforeCursor)) {
+      return false;
+    }
+    // After a complete type: `name = String`, `name = String(120)`, with optional !/?/!default/.
+    return /^\s*[A-Za-z_]\w*\s*=\s*[A-Za-z_]\w*\s*(\([^)]*\))?\s*$/.test(
+      beforeCursor
+    );
+  }
+
+  private isJadeRelationCallContext(line: string, character: number): boolean {
+    const beforeCursor = line.substring(0, character);
+    return /\b(hasMany|hasOne|belongsTo|hasAndBelongsToMany|hasManyThrough)\s*\(\s*$/.test(
+      beforeCursor
+    );
+  }
+
+  private isJadeModelStartContext(line: string, character: number): boolean {
+    const beforeCursor = line.substring(0, character);
+    return /^\s*model\s*$/.test(beforeCursor);
+  }
+
+  private getJadeModifierCompletions(): CompletionItem[] {
+    return [
+      {
+        label: "!",
+        kind: CompletionItemKind.Operator,
+        detail: "Required (notNull)",
+        documentation: "Aligns with core Declarative — sets not_null",
+      },
+      {
+        label: "?",
+        kind: CompletionItemKind.Operator,
+        detail: "Nullable",
+      },
+      {
+        label: '!default("${1:value}")',
+        kind: CompletionItemKind.Method,
+        detail: "Required + default value",
+        insertText: '!default(${1:"user"})',
+        insertTextFormat: InsertTextFormat.Snippet,
+      },
+      {
+        label: '.default("${1:value}")',
+        kind: CompletionItemKind.Method,
+        detail: "Default value",
+        insertText: '.default(${1:"user"})',
+        insertTextFormat: InsertTextFormat.Snippet,
+      },
+    ];
+  }
+
+  private getRelationCallCompletions(): CompletionItem[] {
+    return ["hasMany", "belongsTo", "hasOne"].map((name) => ({
+      label: name,
+      kind: CompletionItemKind.Function,
+      detail: `${name}(Model)`,
+      insertText: `${name}(\${1:Model})`,
+      insertTextFormat: InsertTextFormat.Snippet,
+    }));
+  }
+
+  private getJadeKeywordCompletions(): CompletionItem[] {
+    return [
+      {
+        label: "table",
+        kind: CompletionItemKind.Keyword,
+        detail: "Custom table name",
+        insertText: 'table = "${1:users}"',
+        insertTextFormat: InsertTextFormat.Snippet,
+      },
+      {
+        label: "timestamps",
+        kind: CompletionItemKind.Keyword,
+        detail: "Enable/disable timestamps convention",
+        insertText: "timestamps = ${1|true,false|}",
+        insertTextFormat: InsertTextFormat.Snippet,
+      },
+      {
+        label: "id",
+        kind: CompletionItemKind.Keyword,
+        detail: "Set id = false to disable auto primary key",
+        insertText: "id = false",
+      },
+      {
+        label: "hasMany",
+        kind: CompletionItemKind.Function,
+        detail: "hasMany(Model)",
+        insertText: "hasMany(${1:Model})",
+        insertTextFormat: InsertTextFormat.Snippet,
+      },
+      {
+        label: "belongsTo",
+        kind: CompletionItemKind.Function,
+        detail: "belongsTo(Model)",
+        insertText: "belongsTo(${1:Model})",
+        insertTextFormat: InsertTextFormat.Snippet,
+      },
+      {
+        label: "hasOne",
+        kind: CompletionItemKind.Function,
+        detail: "hasOne(Model)",
+        insertText: "hasOne(${1:Model})",
+        insertTextFormat: InsertTextFormat.Snippet,
+      },
+      ...this.getTypeCompletions(),
+    ];
+  }
+
+  private getJadeGeneralCompletions(): CompletionItem[] {
+    const items: CompletionItem[] = [];
+
+    items.push({
+      label: "model",
+      kind: CompletionItemKind.Keyword,
+      detail: "Declare a model block",
+      insertText: "model ${1:Name} {\n\t${0}\n}",
+      insertTextFormat: InsertTextFormat.Snippet,
+    });
+
+    const models = this.analyzer.getAllModels();
+    for (const model of models) {
+      items.push({
+        label: model.name,
+        kind: CompletionItemKind.Enum,
+        detail: `Model ${model.name}`,
+        documentation: model.table ? `Table: ${model.table}` : undefined,
+      });
+    }
+
+    items.push(...this.getJadeKeywordCompletions());
 
     return items;
   }

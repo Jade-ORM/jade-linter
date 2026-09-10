@@ -30,7 +30,10 @@ export function activate(context: ExtensionContext): void {
 
   // Options to control the language client
   const clientOptions: LanguageClientOptions = {
-    documentSelector: [{ scheme: "file", language: "lua" }],
+    documentSelector: [
+      { scheme: "file", language: "lua" },
+      { scheme: "file", language: "jade" },
+    ],
     synchronize: {
       fileEvents: workspace.createFileSystemWatcher("**/.clientrc")
     }
